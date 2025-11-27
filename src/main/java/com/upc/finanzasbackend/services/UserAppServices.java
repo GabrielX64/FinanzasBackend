@@ -27,15 +27,13 @@ public class UserAppServices implements IUserAppService {
 
     @Override
     public UserApp updateUserApp(UserApp userApp) {
-        //UserApp existingUserApp = userAppRepository.findByUserID(userApp.getUserID());
-        /*
-        if (userAppRepository.findById(userApp.getUserID()).isPresent()) {
+        UserApp existingUserApp = userAppRepository.findByUserAppID(userApp.getUserAppID());
+        if (userAppRepository.existsById(userApp.getUserAppID())) {
             return userAppRepository.save(userApp);
         } else {
             throw new RequestException("E-006", HttpStatus.NOT_FOUND,"El usuario a actualizar no existe");
         }
-        */
-        return userAppRepository.save(userApp);
+        //return userAppRepository.save(userApp);
     }
 
     @Override

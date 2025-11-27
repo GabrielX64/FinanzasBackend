@@ -4,5 +4,5 @@ import com.upc.finanzasbackend.entities.UserApp;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserAppRepository extends JpaRepository<UserApp, Long> {
-    public UserApp findByUserID(long userID);
+    public UserApp findByUserAppID(Long userAppID);
 }

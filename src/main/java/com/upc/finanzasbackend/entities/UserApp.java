@@ -17,7 +17,7 @@ import lombok.Setter;
 public class UserApp {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userID;
+        private Long userAppID;
     private String names;
     private String surnames;
     private String username;
