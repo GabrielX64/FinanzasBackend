@@ -24,7 +24,7 @@ public class LoanRequestDTO {
 
     private BigDecimal tea;                  // solo si rateType = "TEA"
     private BigDecimal tnp;                  // solo si rateType = "TNP"
-    private Integer capitalizationsPerYear;  // m: ej. 12, 6, 4...
+    private Long capitalizationFrequencyID;
 
     // Rentabilidad/COK
     private BigDecimal cok;

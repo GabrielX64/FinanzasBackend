@@ -30,7 +30,10 @@ public class Loan {
     // NUEVO: datos de tasa nominal
     private String rateType;              // "TEA" o "TNP"
     private BigDecimal tnp;              // puede ser null si es TEA
-    private Integer capitalizationsPerYear;
+
+    @ManyToOne
+    @JoinColumn(name = "capitalization_frequency_id")
+    private CapitalizationFrequency capitalizationFrequency;
 
     private Integer years;                 // años
     private Integer frequencyPerYear;      // cuotas por año

@@ -4,10 +4,12 @@ import com.upc.finanzasbackend.Interfaces.ILoanService;
 import com.upc.finanzasbackend.dtos.LoanInstallmentDTO;
 import com.upc.finanzasbackend.dtos.LoanRequestDTO;
 import com.upc.finanzasbackend.dtos.LoanResponseDTO;
+import com.upc.finanzasbackend.entities.CapitalizationFrequency;
 import com.upc.finanzasbackend.entities.Loan;
 import com.upc.finanzasbackend.entities.LoanInstallment;
 import com.upc.finanzasbackend.entities.UserApp;
 import com.upc.finanzasbackend.exceptions.RequestException;
+import com.upc.finanzasbackend.repositories.CapitalizationFrequencyRepository;
 import com.upc.finanzasbackend.repositories.LoanInstallmentRepository;
 import com.upc.finanzasbackend.repositories.LoanRepository;
 import com.upc.finanzasbackend.repositories.UserAppRepository;
@@ -30,6 +32,8 @@ public class LoanService implements ILoanService {
     private LoanInstallmentRepository loanInstallmentRepository;
     @Autowired
     private UserAppRepository userAppRepository;
+    @Autowired
+    private CapitalizationFrequencyRepository capitalizationFrequencyRepository;
 
     private final MathContext MC = new MathContext(16, RoundingMode.HALF_UP);
 
@@ -66,7 +70,6 @@ public class LoanService implements ILoanService {
             return BigDecimal.ZERO;
         }
 
-        // COK periodo (mes de 30 días, año 360)
         double k = cokAnnual.doubleValue();                   // ej. 0.27
         double kPeriod = Math.pow(1 + k, 30.0 / 360.0) - 1.0; // COK mensual 30/360
 
@@ -82,25 +85,21 @@ public class LoanService implements ILoanService {
         if (cashFlows == null || cashFlows.size() < 2) {
             return BigDecimal.ZERO;
         }
-        // Tasa inicial (guess) estilo Excel: 10%
-        double r = 0.10;
+        double r = 0.10; // guess inicial
 
         for (int iter = 0; iter < 100; iter++) {
             double npv = 0.0;
-            double dnpv = 0.0; // derivada del NPV
+            double dnpv = 0.0;
 
             for (int t = 0; t < cashFlows.size(); t++) {
                 double cf = cashFlows.get(t).doubleValue();
                 npv += cf / Math.pow(1 + r, t);
-
                 if (t > 0) {
                     dnpv += -t * cf / Math.pow(1 + r, t + 1);
                 }
             }
-            // Si la derivada se vuelve 0, evitamos división por cero
-            if (Math.abs(dnpv) < 1e-12) {
-                break;
-            }
+            if (Math.abs(dnpv) < 1e-12) break;
+
             double rNext = r - npv / dnpv;
             if (Math.abs(rNext - r) < 1e-12) {
                 r = rNext;
@@ -108,87 +107,101 @@ public class LoanService implements ILoanService {
             }
             r = rNext;
         }
-        // Convertimos de tasa periódica (mensual) a anual 30/360
-        double irrAnnual = Math.pow(1 + r, 12) - 1;
+
+        double irrAnnual = Math.pow(1 + r, 12) - 1; // 12 meses (30/360)
         return BigDecimal.valueOf(irrAnnual);
     }
 
     @Override
     public LoanResponseDTO createFrenchLoan(LoanRequestDTO dto) {
-        // -------- 1. Usuario ----------
+        // 1. Usuario
         UserApp user = userAppRepository.findById(dto.getUserID())
                 .orElseThrow(() -> new RequestException("U001",
                         HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
-        // -------- 2. Calcular TEA efectiva (desde TEA o TNP) e iPeriod (30/360) --------
+        // 2. Calcular TEA efectiva (TEA o TNP) e iPeriod (TEM 30/360)
         double teaEff;
-        double iPeriod;
 
+        CapitalizationFrequency capFreq = null;
         if ("TNP".equalsIgnoreCase(dto.getRateType())) {
-            double j = dto.getTnp().doubleValue();           // TNP anual decimal
-            int m = dto.getCapitalizationsPerYear();         // ej. 12
 
-            teaEff = Math.pow(1 + j / m, m) - 1.0;          // TEA equivalente
+            if (dto.getCapitalizationFrequencyID() == null) {
+                throw new RequestException("F000",
+                        HttpStatus.BAD_REQUEST,
+                        "Debe indicar la frecuencia de capitalización para TNP");
+            }
+
+            capFreq = capitalizationFrequencyRepository.findById(dto.getCapitalizationFrequencyID())
+                    .orElseThrow(() -> new RequestException("F001",
+                            HttpStatus.NOT_FOUND,
+                            "Frecuencia de capitalización no encontrada"));
+
+            int m = capFreq.getPeriodsPerYear(); // ej. 12, 4, 2, 1
+            double j = dto.getTnp().doubleValue(); // TNP anual
+
+            teaEff = Math.pow(1 + j / m, m) - 1.0;
         } else {
-            teaEff = dto.getTea().doubleValue();            // TEA directa
+            teaEff = dto.getTea().doubleValue();
         }
 
-        iPeriod = Math.pow(1 + teaEff, 30.0 / 360.0) - 1.0; // TEM mensual 30/360
+        double iPeriod = Math.pow(1 + teaEff, 30.0 / 360.0) - 1.0;
         BigDecimal iBD = BigDecimal.valueOf(iPeriod);
 
-        // -------- 3. Guardar cabecera del préstamo --------
+        // 3. Cabecera del préstamo
         Loan loan = new Loan();
         loan.setUserID(user);
         loan.setPrincipal(dto.getPrincipal());
-        loan.setTea(BigDecimal.valueOf(teaEff));            // TEA efectiva equivalente
-        loan.setRateType(dto.getRateType());                // "TEA" o "TNP"
-        loan.setTnp(dto.getTnp());                          // puede ser null si TEA
-        loan.setCapitalizationsPerYear(dto.getCapitalizationsPerYear());
+        loan.setTea(BigDecimal.valueOf(teaEff));
+        loan.setRateType(dto.getRateType());
+        loan.setTnp(dto.getTnp());
         loan.setYears(dto.getYears());
-        loan.setFrequencyPerYear(12);                       // mensual
+        loan.setFrequencyPerYear(12);
         loan.setTotalGrace(dto.getTotalGrace());
         loan.setPartialGrace(dto.getPartialGrace());
         loan.setCok(dto.getCok());
+
+        if (capFreq != null) {
+            loan.setCapitalizationFrequency(capFreq);
+        }
+
         loan = loanRepository.save(loan);
 
         int Ntotal = dto.getYears() * 12;
         int gTotal = dto.getTotalGrace();
         int gParcial = dto.getPartialGrace();
 
-        // -------- 4. Inicialización de cronograma y flujos --------
+        // 4. Cronograma y flujos
         BigDecimal balance = dto.getPrincipal();
         List<LoanInstallment> installments = new ArrayList<>();
         List<BigDecimal> cashFlows = new ArrayList<>();
 
-        // Punto de vista del CLIENTE:
-        // CF0 = +principal (recibe dinero)
+        // CF0: cliente recibe el préstamo
         cashFlows.add(balance);
 
-        // -------- 5. Gracia total: capitaliza interés, no paga nada --------
+        // 5. Gracia total
         for (int k = 1; k <= gTotal; k++) {
             BigDecimal initial = balance;
             BigDecimal interest = initial.multiply(iBD, MC);
             BigDecimal amort = BigDecimal.ZERO;
             BigDecimal fee = BigDecimal.ZERO;
-            BigDecimal finalBal = initial.add(interest);    // se capitaliza
+            BigDecimal finalBal = initial.add(interest);
 
             LoanInstallment li = buildInstallment(
                     loan, k, initial, interest, amort, fee, finalBal, BigDecimal.ZERO
             );
             installments.add(li);
-            cashFlows.add(BigDecimal.ZERO);                 // cliente no paga
+            cashFlows.add(BigDecimal.ZERO);
             balance = finalBal;
         }
 
-        // -------- 6. Gracia parcial: paga solo intereses --------
+        // 6. Gracia parcial
         for (int k = gTotal + 1; k <= gTotal + gParcial; k++) {
             BigDecimal initial = balance;
             BigDecimal interest = initial.multiply(iBD, MC);
             BigDecimal amort = BigDecimal.ZERO;
-            BigDecimal fee = interest;                      // cuota = interés
-            BigDecimal finalBal = initial;                  // saldo se mantiene
+            BigDecimal fee = interest;
+            BigDecimal finalBal = initial;
 
-            // desde el cliente: flujo negativo (pago)
             LoanInstallment li = buildInstallment(
                     loan, k, initial, interest, amort, fee, finalBal, fee.negate()
             );
@@ -197,7 +210,7 @@ public class LoanService implements ILoanService {
             balance = finalBal;
         }
 
-        // -------- 7. Etapa normal: cuota francesa constante --------
+        // 7. Etapa normal
         int Nnormal = Ntotal - gTotal - gParcial;
         if (Nnormal <= 0) {
             throw new RequestException("L001", HttpStatus.BAD_REQUEST,
@@ -211,20 +224,17 @@ public class LoanService implements ILoanService {
 
         int start = gTotal + gParcial + 1;
         for (int k = start; k <= Ntotal; k++) {
-
             BigDecimal initial = balance;
             BigDecimal interest = initial.multiply(iBD, MC);
             BigDecimal amort = cuota.subtract(interest);
             BigDecimal finalBal = initial.subtract(amort);
 
-            // última cuota: corregir redondeo para dejar saldo 0
             if (k == Ntotal) {
                 amort = initial;
                 cuota = interest.add(amort);
                 finalBal = BigDecimal.ZERO;
             }
 
-            // desde el cliente: flujo negativo (pago de cuota)
             LoanInstallment li = buildInstallment(
                     loan, k, initial, interest, amort, cuota, finalBal, cuota.negate()
             );
@@ -235,26 +245,24 @@ public class LoanService implements ILoanService {
 
         loanInstallmentRepository.saveAll(installments);
 
-        // -------- 8. VAN / TIR / TCEA con cashFlows y COK --------
+        // 8. VAN / TIR / TCEA
         BigDecimal van = calculateNPV(cashFlows, dto.getCok());
         BigDecimal tirAnnual = calculateIRR(cashFlows);
-        BigDecimal tcea = tirAnnual; // TCEA = TIR anual de los flujos del cliente
+        BigDecimal tcea = tirAnnual;
 
         loan.setVan(van);
         loan.setTir(tirAnnual);
         loan.setTcea(tcea);
         loanRepository.save(loan);
 
-        // -------- 9. Armar response ----------
+        // 9. Response
         LoanResponseDTO response = new LoanResponseDTO();
         response.setLoanId(loan.getLoanID());
         response.setVan(van);
         response.setTir(tirAnnual);
         response.setTcea(tcea);
         response.setSchedule(
-                installments.stream()
-                        .map(this::toDto)
-                        .collect(Collectors.toList())
+                installments.stream().map(this::toDto).collect(Collectors.toList())
         );
         return response;
     }
