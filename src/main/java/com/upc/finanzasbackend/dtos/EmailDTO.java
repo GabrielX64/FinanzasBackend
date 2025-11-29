@@ -9,11 +9,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class UserAppDTO {
-    private Long userAppID;
-    private String names;
-    private String surnames;
+public class EmailDTO {
     private String email;
-    private String username;
-    private String password;
 }

@@ -4,16 +4,21 @@ import com.upc.finanzasbackend.Interfaces.IUserAppService;
 import com.upc.finanzasbackend.entities.UserApp;
 import com.upc.finanzasbackend.exceptions.RequestException;
 import com.upc.finanzasbackend.repositories.UserAppRepository;
+import com.upc.finanzasbackend.util.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class UserAppServices implements IUserAppService {
     @Autowired
     private UserAppRepository userAppRepository;
+
+    @Autowired
+    private ValidationService validationService;
 
     @Override
     public List<UserApp> getUserApps() {
@@ -27,6 +32,7 @@ public class UserAppServices implements IUserAppService {
 
     @Override
     public UserApp updateUserApp(UserApp userApp) {
+
         UserApp existingUserApp = userAppRepository.findByUserAppID(userApp.getUserAppID());
         if (userAppRepository.existsById(userApp.getUserAppID())) {
             return userAppRepository.save(userApp);
@@ -38,10 +44,9 @@ public class UserAppServices implements IUserAppService {
 
     @Override
     public void deleteUserApp(Long userID) {
-        if (userAppRepository.existsById(userID)) {
-            userAppRepository.deleteById(userID);
-        }else{
+        if (!userAppRepository.existsById(userID)) {
             throw new RequestException("E-006", HttpStatus.NOT_FOUND,"El usuario a eliminar no existe");
         }
+        userAppRepository.deleteById(userID);
     }
 }
