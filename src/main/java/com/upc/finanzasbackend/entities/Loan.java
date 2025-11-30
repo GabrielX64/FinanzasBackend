@@ -46,4 +46,8 @@ public class Loan {
     private BigDecimal van;                // opcional
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ManyToOne
+    @JoinColumn(name = "property_id")
+    private Property property;
 }

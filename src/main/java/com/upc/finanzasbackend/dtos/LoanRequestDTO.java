@@ -19,6 +19,8 @@ public class LoanRequestDTO {
     private Integer totalGrace;
     private Integer partialGrace;
 
+    private Long propertyId;
+
     // --- TASA ---
     private String rateType;                 // "TEA" o "TNP"
 
