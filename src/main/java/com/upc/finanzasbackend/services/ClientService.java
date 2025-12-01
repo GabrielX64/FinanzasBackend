@@ -75,8 +75,8 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public Client updateCliente(Client client) {
-        Client existingCliente = clientRepository.findById(client.getClientID())
+    public Client updateClient(Client client) {
+        Client existingClient = clientRepository.findById(client.getClientID())
                 .orElseThrow(() -> new RequestException("C001",
                         HttpStatus.NOT_FOUND,
                         "Cliente no encontrado"));
@@ -103,7 +103,7 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public void deleteCliente(Long id) {
+    public void deleteClient(Long id) {
         if (!clientRepository.existsById(id)) {
             throw new RequestException("C001",
                     HttpStatus.NOT_FOUND,
@@ -113,7 +113,7 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public Client getClienteByDni(String dni) {
+    public Client getClientByDni(String dni) {
         return clientRepository.findByDni(dni)
                 .orElseThrow(() -> new RequestException("C001",
                         HttpStatus.NOT_FOUND,
@@ -121,10 +121,10 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public BonoMiViviendaDTO verificarBonoMiVivienda(Long clienteId, BigDecimal precioVivienda) {
-        Client client = getClientById(clienteId);
+    public BonoMiViviendaDTO checkMyHomeBonus(Long clientId, BigDecimal propertyPrice) {
+        Client client = getClientById(clientId);
         BonoMiViviendaDTO resultado = new BonoMiViviendaDTO();
-        resultado.setPropertyPrice(precioVivienda);
+        resultado.setPropertyPrice(propertyPrice);
         resultado.setMonthlyIncome(client.getMonthlyIncome());
 
         // Límite máximo del precio de vivienda según MiVivienda (en UIT)
@@ -132,7 +132,7 @@ public class ClientService implements IClientService {
         BigDecimal PRECIO_MAXIMO = new BigDecimal("276925");
 
         // Validar precio de vivienda
-        if (precioVivienda.compareTo(PRECIO_MAXIMO) > 0) {
+        if (propertyPrice.compareTo(PRECIO_MAXIMO) > 0) {
             resultado.setApplies(false);
             resultado.setReason("El precio de la vivienda supera el límite máximo de S/ 276,925 (5.3 UIT)");
             return resultado;

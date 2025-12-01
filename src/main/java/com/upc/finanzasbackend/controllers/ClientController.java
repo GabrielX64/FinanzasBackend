@@ -42,7 +42,7 @@ public class ClientController {
         dto.setCurrentAddress(client.getCurrentAddress());
 
         if (client.getMaritalStatus() != null) {
-            dto.getMaritalStatusID(client.getMaritalStatus().getMaritalStatusId());
+            dto.setMaritalStatusID(client.getMaritalStatus().getMaritalStatusId());
         }
 
         return dto;
@@ -78,42 +78,42 @@ public class ClientController {
     }
 
     @GetMapping("/cliente/{id}")
-    public ResponseEntity<ClientDTO> getClienteById(@PathVariable Long id) {
+    public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
         Client client = clientService.getClientById(id);
         return ResponseEntity.ok(toDTO(client));
     }
 
     @GetMapping("/cliente/dni/{dni}")
-    public ResponseEntity<ClientDTO> getClienteByDni(@PathVariable String dni) {
+    public ResponseEntity<ClientDTO> getClientByDni(@PathVariable String dni) {
         Client client = clientService.getClientByDni(dni);
         return ResponseEntity.ok(toDTO(client));
     }
 
     @PostMapping("/cliente")
-    public ResponseEntity<ClientDTO> createCliente(@RequestBody ClientDTO clientDTO) {
+    public ResponseEntity<ClientDTO> createClient(@RequestBody ClientDTO clientDTO) {
         Client client = toEntity(clientDTO);
         client = clientService.createClient(client);
         return ResponseEntity.ok(toDTO(client));
     }
 
     @PutMapping("/cliente/update")
-    public ResponseEntity<ClientDTO> updateCliente(@RequestBody ClientDTO clientDTO) {
+    public ResponseEntity<ClientDTO> updateClient(@RequestBody ClientDTO clientDTO) {
         Client client = toEntity(clientDTO);
         client = clientService.updateClient(client);
         return ResponseEntity.ok(toDTO(client));
     }
 
     @DeleteMapping("/cliente/delete/{id}")
-    public ResponseEntity<String> deleteCliente(@PathVariable Long id) {
+    public ResponseEntity<String> deleteClient(@PathVariable Long id) {
         clientService.deleteClient(id);
         return ResponseEntity.ok("Cliente eliminado correctamente");
     }
 
     @GetMapping("/cliente/{clienteId}/bono-mivivienda")
-    public ResponseEntity<BonoMiViviendaDTO> verificarBonoMiVivienda(
+    public ResponseEntity<BonoMiViviendaDTO> checkMyHomeBonus(
             @PathVariable Long clienteId,
             @RequestParam BigDecimal precioVivienda) {
-        BonoMiViviendaDTO resultado = clientService.verificarBonoMiVivienda(clienteId, precioVivienda);
+        BonoMiViviendaDTO resultado = clientService.checkMyHomeBonus(clienteId, precioVivienda);
         return ResponseEntity.ok(resultado);
     }
 }

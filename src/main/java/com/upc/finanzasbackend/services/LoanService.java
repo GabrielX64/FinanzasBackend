@@ -68,13 +68,13 @@ public class LoanService implements ILoanService {
             return BigDecimal.ZERO;
         }
 
-        double k = cokAnnual.doubleValue();                   // ej. 0.27
-        double kPeriod = Math.pow(1 + k, 30.0 / 360.0) - 1.0; // COK mensual 30/360
+        double k = cokAnnual.doubleValue();
+        double kPeriod = Math.pow(1 + k, 30.0 / 360.0) - 1.0;
 
         double npv = 0.0;
         for (int t = 0; t < cashFlows.size(); t++) {
             double cf = cashFlows.get(t).doubleValue();
-            npv += cf / Math.pow(1 + kPeriod, t);             // t = 0..N
+            npv += cf / Math.pow(1 + kPeriod, t);
         }
         return BigDecimal.valueOf(npv);
     }
@@ -83,7 +83,7 @@ public class LoanService implements ILoanService {
         if (cashFlows == null || cashFlows.size() < 2) {
             return BigDecimal.ZERO;
         }
-        double r = 0.10; // guess inicial
+        double r = 0.10;
 
         for (int iter = 0; iter < 100; iter++) {
             double npv = 0.0;
@@ -106,18 +106,16 @@ public class LoanService implements ILoanService {
             r = rNext;
         }
 
-        double irrAnnual = Math.pow(1 + r, 12) - 1; // 12 meses (30/360)
+        double irrAnnual = Math.pow(1 + r, 12) - 1;
         return BigDecimal.valueOf(irrAnnual);
     }
 
     @Override
     public LoanResponseDTO createFrenchLoan(LoanRequestDTO dto) {
-        // 1. MODIFICADO: Obtener Cliente (obligatorio)
         Client client = clientRepository.findById(dto.getClientID())
                 .orElseThrow(() -> new RequestException("C001",
                         HttpStatus.NOT_FOUND, "Cliente no encontrado"));
 
-        // 2. NUEVO: Obtener Asesor (opcional)
         UserApp asesor = null;
         if (dto.getAsesorID() != null) {
             asesor = userAppRepository.findById(dto.getAsesorID())
@@ -125,24 +123,20 @@ public class LoanService implements ILoanService {
                             HttpStatus.NOT_FOUND, "Asesor no encontrado"));
         }
 
-        // 3. NUEVO: Obtener Entidad Financiera
         FinancialEntity entidad = entityFinancialRepository.findById(dto.getFinancialEntityID())
                 .orElseThrow(() -> new RequestException("EF001",
                         HttpStatus.NOT_FOUND, "Entidad financiera no encontrada"));
 
-        // 4. NUEVO: Calcular cuota inicial y monto a financiar
         BigDecimal precioVivienda = dto.getPropertyPrice();
         BigDecimal porcentajeCuota = entidad.getDownPaymentPercentage();
         BigDecimal cuotaInicial = precioVivienda.multiply(porcentajeCuota)
                 .divide(new BigDecimal("100"), MC);
         BigDecimal montoFinanciado = precioVivienda.subtract(cuotaInicial);
 
-        // 5. Calcular TEA efectiva (TEA o TNP) e iPeriod (TEM 30/360)
         double teaEff;
-
         CapitalizationFrequency capFreq = null;
-        if ("TNP".equalsIgnoreCase(dto.getRateType())) {
 
+        if ("TNP".equalsIgnoreCase(dto.getRateType())) {
             if (dto.getCapitalizationFrequencyID() == null) {
                 throw new RequestException("F000",
                         HttpStatus.BAD_REQUEST,
@@ -154,9 +148,8 @@ public class LoanService implements ILoanService {
                             HttpStatus.NOT_FOUND,
                             "Frecuencia de capitalización no encontrada"));
 
-            int m = capFreq.getPeriodsPerYear(); // ej. 12, 4, 2, 1
-            double j = dto.getTnp().doubleValue(); // TNP anual
-
+            int m = capFreq.getPeriodsPerYear();
+            double j = dto.getTnp().doubleValue();
             teaEff = Math.pow(1 + j / m, m) - 1.0;
         } else {
             teaEff = dto.getTea().doubleValue();
@@ -165,12 +158,14 @@ public class LoanService implements ILoanService {
         double iPeriod = Math.pow(1 + teaEff, 30.0 / 360.0) - 1.0;
         BigDecimal iBD = BigDecimal.valueOf(iPeriod);
 
-        // 3. Cabecera del préstamo
         Loan loan = new Loan();
-        loan.setClientID(client); // MODIFICADO: cliente obligatorio
-        loan.setAsesor(asesor); // NUEVO: asesor opcional
+        loan.setClientID(client);
+        loan.setAsesor(asesor);
         loan.setFinancialEntity(entidad);
         loan.setPrincipal(dto.getPrincipal());
+        loan.setPropertyPrice(precioVivienda);
+        loan.setDownPayment(cuotaInicial);
+        loan.setDownPaymentPercentage(porcentajeCuota);
         loan.setTea(BigDecimal.valueOf(teaEff));
         loan.setRateType(dto.getRateType());
         loan.setTnp(dto.getTnp());
@@ -190,15 +185,12 @@ public class LoanService implements ILoanService {
         int gTotal = dto.getTotalGrace();
         int gParcial = dto.getPartialGrace();
 
-        // 4. Cronograma y flujos
         BigDecimal balance = dto.getPrincipal();
         List<LoanInstallment> installments = new ArrayList<>();
         List<BigDecimal> cashFlows = new ArrayList<>();
 
-        // CF0: cliente recibe el préstamo
         cashFlows.add(balance);
 
-        // 5. Gracia total
         for (int k = 1; k <= gTotal; k++) {
             BigDecimal initial = balance;
             BigDecimal interest = initial.multiply(iBD, MC);
@@ -214,7 +206,6 @@ public class LoanService implements ILoanService {
             balance = finalBal;
         }
 
-        // 6. Gracia parcial
         for (int k = gTotal + 1; k <= gTotal + gParcial; k++) {
             BigDecimal initial = balance;
             BigDecimal interest = initial.multiply(iBD, MC);
@@ -230,7 +221,6 @@ public class LoanService implements ILoanService {
             balance = finalBal;
         }
 
-        // 7. Etapa normal
         int Nnormal = Ntotal - gTotal - gParcial;
         if (Nnormal <= 0) {
             throw new RequestException("L001", HttpStatus.BAD_REQUEST,
@@ -265,7 +255,6 @@ public class LoanService implements ILoanService {
 
         loanInstallmentRepository.saveAll(installments);
 
-        // 8. VAN / TIR / TCEA
         BigDecimal van = calculateNPV(cashFlows, dto.getCok());
         BigDecimal tirAnnual = calculateIRR(cashFlows);
         BigDecimal tcea = tirAnnual;
@@ -275,12 +264,16 @@ public class LoanService implements ILoanService {
         loan.setTcea(tcea);
         loanRepository.save(loan);
 
-        // 9. Response
         LoanResponseDTO response = new LoanResponseDTO();
         response.setLoanId(loan.getLoanID());
         response.setVan(van);
         response.setTir(tirAnnual);
         response.setTcea(tcea);
+        response.setPropertyPrice(precioVivienda);
+        response.setDownPayment(cuotaInicial);
+        response.setDownPaymentPercentage(porcentajeCuota);
+        response.setFinancedAmount(montoFinanciado);
+        response.setFinancialEntity(entidad.getName());
         response.setSchedule(
                 installments.stream().map(this::toDto).collect(Collectors.toList())
         );
@@ -296,5 +289,10 @@ public class LoanService implements ILoanService {
     @Override
     public List<Loan> getLoansByUser(Long userID) {
         return loanRepository.findByAsesor_UserAppID(userID);
+    }
+
+    @Override
+    public List<Loan> getLoanByClient(Long clientID) {
+        return loanRepository.findByClientID_ClientID(clientID);
     }
 }

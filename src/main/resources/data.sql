@@ -6,7 +6,7 @@
 INSERT INTO capitalization_frequency (name, periods_per_year)
 SELECT 'Diaria', 360
     WHERE NOT EXISTS (
-    SELECT 1 FROM capitalization_frequency WHERE name = 'Diaria (360)'
+    SELECT 1 FROM capitalization_frequency WHERE name = 'Diaria'
 );
 
 -- SEMANAL (52)
@@ -66,67 +66,67 @@ SELECT 'Anual', 1
 );
 
 -- =========================
--- INSERTAR ESTADOS CIVILES
+-- INSERTAR ESTADOS CIVILES (Tabla: marital_status)
 -- =========================
 
-INSERT INTO estado_civil (nombre, descripcion)
-SELECT 'SOLTERO', 'Persona soltera'
+INSERT INTO marital_status (status_name)
+SELECT 'SOLTERO'
     WHERE NOT EXISTS (
-    SELECT 1 FROM estado_civil WHERE nombre = 'SOLTERO'
+    SELECT 1 FROM marital_status WHERE status_name = 'SOLTERO'
 );
 
-INSERT INTO estado_civil (nombre, descripcion)
-SELECT 'CASADO', 'Persona casada'
+INSERT INTO marital_status (status_name)
+SELECT 'CASADO'
     WHERE NOT EXISTS (
-    SELECT 1 FROM estado_civil WHERE nombre = 'CASADO'
+    SELECT 1 FROM marital_status WHERE status_name = 'CASADO'
 );
 
-INSERT INTO estado_civil (nombre, descripcion)
-SELECT 'DIVORCIADO', 'Persona divorciada'
+INSERT INTO marital_status (status_name)
+SELECT 'DIVORCIADO'
     WHERE NOT EXISTS (
-    SELECT 1 FROM estado_civil WHERE nombre = 'DIVORCIADO'
+    SELECT 1 FROM marital_status WHERE status_name = 'DIVORCIADO'
 );
 
-INSERT INTO estado_civil (nombre, descripcion)
-SELECT 'VIUDO', 'Persona viuda'
+INSERT INTO marital_status (status_name)
+SELECT 'VIUDO'
     WHERE NOT EXISTS (
-    SELECT 1 FROM estado_civil WHERE nombre = 'VIUDO'
+    SELECT 1 FROM marital_status WHERE status_name = 'VIUDO'
 );
 
-INSERT INTO estado_civil (nombre, descripcion)
-SELECT 'CONVIVIENTE', 'Persona en convivencia'
+INSERT INTO marital_status (status_name)
+SELECT 'CONVIVIENTE'
     WHERE NOT EXISTS (
-    SELECT 1 FROM estado_civil WHERE nombre = 'CONVIVIENTE'
+    SELECT 1 FROM marital_status WHERE status_name = 'CONVIVIENTE'
 );
 
 -- =========================
--- INSERTAR ENTIDADES FINANCIERAS
+-- INSERTAR ENTIDADES FINANCIERAS (Tabla: financial_entity)
 -- =========================
 
 -- BCP (10% de cuota inicial)
-INSERT INTO entidad_financiera (nombre, codigo, porcentaje_cuota_inicial, activo)
+INSERT INTO financial_entity (name, code, down_payment_percentage, active)
 SELECT 'Banco de Crédito del Perú', 'BCP', 10.00, true
     WHERE NOT EXISTS (
-    SELECT 1 FROM entidad_financiera WHERE codigo = 'BCP'
+    SELECT 1 FROM financial_entity WHERE code = 'BCP'
 );
 
 -- BBVA (9% de cuota inicial)
-INSERT INTO entidad_financiera (nombre, codigo, porcentaje_cuota_inicial, activo)
+INSERT INTO financial_entity (name, code, down_payment_percentage, active)
 SELECT 'BBVA Perú', 'BBVA', 9.00, true
     WHERE NOT EXISTS (
-    SELECT 1 FROM entidad_financiera WHERE codigo = 'BBVA'
+    SELECT 1 FROM financial_entity WHERE code = 'BBVA'
 );
 
 -- INTERBANK (8.5% de cuota inicial)
-INSERT INTO entidad_financiera (nombre, codigo, porcentaje_cuota_inicial, activo)
+INSERT INTO financial_entity (name, code, down_payment_percentage, active)
 SELECT 'Interbank', 'INTERBANK', 8.50, true
     WHERE NOT EXISTS (
-    SELECT 1 FROM entidad_financiera WHERE codigo = 'INTERBANK'
+    SELECT 1 FROM financial_entity WHERE code = 'INTERBANK'
 );
 
 -- SCOTIABANK (11% de cuota inicial)
-INSERT INTO entidad_financiera (nombre, codigo, porcentaje_cuota_inicial, activo)
+INSERT INTO financial_entity (name, code, down_payment_percentage, active)
 SELECT 'Scotiabank Perú', 'SCOTIABANK', 11.00, true
     WHERE NOT EXISTS (
-    SELECT 1 FROM entidad_financiera WHERE codigo = 'SCOTIABANK'
+    SELECT 1 FROM financial_entity WHERE code = 'SCOTIABANK'
 );
