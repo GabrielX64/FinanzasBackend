@@ -11,4 +11,5 @@ public interface ILoanService {
     public LoanResponseDTO createFrenchLoan(LoanRequestDTO dto);
     public List<LoanInstallmentDTO> getScheduleByLoanId(Long loanID);
     public List<Loan> getLoansByUser(Long userID);
+    public List<Loan> getLoanByClient(Long clientID);
 }

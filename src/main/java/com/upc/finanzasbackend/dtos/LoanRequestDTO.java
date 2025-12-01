@@ -12,9 +12,11 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class LoanRequestDTO {
-    private Long userID;
+    private Long clientID;
+    private Long asesorID;
+    private Long financialEntityID;
     // Monto y plazo
-    private BigDecimal principal;
+    private BigDecimal principal; // Monto después de restar la cuota inicial
     private Integer years;
     private Integer totalGrace;
     private Integer partialGrace;
@@ -30,4 +32,7 @@ public class LoanRequestDTO {
 
     // Rentabilidad/COK
     private BigDecimal cok;
+
+    // Precio de la vivienda (antes de la cuota inicial)
+    private BigDecimal propertyPrice;
 }

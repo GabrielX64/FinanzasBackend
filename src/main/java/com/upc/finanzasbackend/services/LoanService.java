@@ -4,15 +4,9 @@ import com.upc.finanzasbackend.Interfaces.ILoanService;
 import com.upc.finanzasbackend.dtos.LoanInstallmentDTO;
 import com.upc.finanzasbackend.dtos.LoanRequestDTO;
 import com.upc.finanzasbackend.dtos.LoanResponseDTO;
-import com.upc.finanzasbackend.entities.CapitalizationFrequency;
-import com.upc.finanzasbackend.entities.Loan;
-import com.upc.finanzasbackend.entities.LoanInstallment;
-import com.upc.finanzasbackend.entities.UserApp;
+import com.upc.finanzasbackend.entities.*;
 import com.upc.finanzasbackend.exceptions.RequestException;
-import com.upc.finanzasbackend.repositories.CapitalizationFrequencyRepository;
-import com.upc.finanzasbackend.repositories.LoanInstallmentRepository;
-import com.upc.finanzasbackend.repositories.LoanRepository;
-import com.upc.finanzasbackend.repositories.UserAppRepository;
+import com.upc.finanzasbackend.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,7 +27,11 @@ public class LoanService implements ILoanService {
     @Autowired
     private UserAppRepository userAppRepository;
     @Autowired
+    private ClientRepository clientRepository;
+    @Autowired
     private CapitalizationFrequencyRepository capitalizationFrequencyRepository;
+    @Autowired
+    private EntityFinancialRepository entityFinancialRepository;
 
     private final MathContext MC = new MathContext(16, RoundingMode.HALF_UP);
 
@@ -114,12 +112,32 @@ public class LoanService implements ILoanService {
 
     @Override
     public LoanResponseDTO createFrenchLoan(LoanRequestDTO dto) {
-        // 1. Usuario
-        UserApp user = userAppRepository.findById(dto.getUserID())
-                .orElseThrow(() -> new RequestException("U001",
-                        HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        // 1. MODIFICADO: Obtener Cliente (obligatorio)
+        Client client = clientRepository.findById(dto.getClientID())
+                .orElseThrow(() -> new RequestException("C001",
+                        HttpStatus.NOT_FOUND, "Cliente no encontrado"));
 
-        // 2. Calcular TEA efectiva (TEA o TNP) e iPeriod (TEM 30/360)
+        // 2. NUEVO: Obtener Asesor (opcional)
+        UserApp asesor = null;
+        if (dto.getAsesorID() != null) {
+            asesor = userAppRepository.findById(dto.getAsesorID())
+                    .orElseThrow(() -> new RequestException("U001",
+                            HttpStatus.NOT_FOUND, "Asesor no encontrado"));
+        }
+
+        // 3. NUEVO: Obtener Entidad Financiera
+        FinancialEntity entidad = entityFinancialRepository.findById(dto.getFinancialEntityID())
+                .orElseThrow(() -> new RequestException("EF001",
+                        HttpStatus.NOT_FOUND, "Entidad financiera no encontrada"));
+
+        // 4. NUEVO: Calcular cuota inicial y monto a financiar
+        BigDecimal precioVivienda = dto.getPropertyPrice();
+        BigDecimal porcentajeCuota = entidad.getDownPaymentPercentage();
+        BigDecimal cuotaInicial = precioVivienda.multiply(porcentajeCuota)
+                .divide(new BigDecimal("100"), MC);
+        BigDecimal montoFinanciado = precioVivienda.subtract(cuotaInicial);
+
+        // 5. Calcular TEA efectiva (TEA o TNP) e iPeriod (TEM 30/360)
         double teaEff;
 
         CapitalizationFrequency capFreq = null;
@@ -149,7 +167,9 @@ public class LoanService implements ILoanService {
 
         // 3. Cabecera del préstamo
         Loan loan = new Loan();
-        loan.setUserID(user);
+        loan.setClientID(client); // MODIFICADO: cliente obligatorio
+        loan.setAsesor(asesor); // NUEVO: asesor opcional
+        loan.setFinancialEntity(entidad);
         loan.setPrincipal(dto.getPrincipal());
         loan.setTea(BigDecimal.valueOf(teaEff));
         loan.setRateType(dto.getRateType());
@@ -275,6 +295,6 @@ public class LoanService implements ILoanService {
 
     @Override
     public List<Loan> getLoansByUser(Long userID) {
-        return loanRepository.findByUserID_UserAppID(userID);
+        return loanRepository.findByAsesor_UserAppID(userID);
     }
 }

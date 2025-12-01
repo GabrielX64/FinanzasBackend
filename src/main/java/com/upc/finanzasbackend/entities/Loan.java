@@ -21,10 +21,26 @@ public class Loan {
     private Long loanID;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private UserApp userID;
+    @JoinColumn(name = "client_id")
+    private Client clientID;
+
+    @ManyToOne
+    @JoinColumn(name = "asesor_id")
+    private UserApp asesor;
+
+    // NUEVO: Relación con Entidad Financiera
+    @ManyToOne
+    @JoinColumn(name = "financial_entity_ID")
+    private FinancialEntity financialEntity;
 
     private BigDecimal principal;          // monto del préstamo
+
+    // NUEVO: Datos de precio y cuota inicial
+    private BigDecimal propertyPrice;
+    private BigDecimal downPayment;
+    private BigDecimal downPaymentPercentage;
+
+
     private BigDecimal tea;                // TEA (0.11 = 11%)
 
     // NUEVO: datos de tasa nominal

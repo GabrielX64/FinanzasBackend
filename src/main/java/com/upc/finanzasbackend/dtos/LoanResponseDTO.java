@@ -18,4 +18,12 @@ public class LoanResponseDTO {
     private BigDecimal tcea;
     private BigDecimal van;
     private List<LoanInstallmentDTO> schedule;
+
+    // NUEVO: Información sobre cuota inicial
+    private BigDecimal propertyPrice;
+    private BigDecimal downPayment;
+    private BigDecimal downPaymentPercentage;
+    private BigDecimal financedAmount; // = precioVivienda - cuotaInicial
+    private String financialEntity;
+
 }
