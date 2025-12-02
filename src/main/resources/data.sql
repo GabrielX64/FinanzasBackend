@@ -22,158 +22,158 @@
 -- =========================
 
 -- Tabla: capitalization_frequency
-CREATE TABLE IF NOT EXISTS capitalization_frequency (capitalization_frequency_id BIGSERIAL PRIMARY KEY,
-                                                     name VARCHAR(50) NOT NULL UNIQUE, periods_per_year INTEGER NOT NULL);
-
--- Tabla: marital_status
-CREATE TABLE IF NOT EXISTS marital_status (marital_status_id BIGSERIAL PRIMARY KEY,
-                                           status_name VARCHAR(50) NOT NULL UNIQUE);
-
--- Tabla: financial_entity
-CREATE TABLE IF NOT EXISTS financial_entity (financial_entity_id BIGSERIAL PRIMARY KEY,
-                                             name VARCHAR(255) NOT NULL,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    down_payment_percentage NUMERIC(5,2) NOT NULL,
-    active BOOLEAN DEFAULT true);
-
--- Tabla: currency
-CREATE TABLE IF NOT EXISTS currency (currency_id BIGSERIAL PRIMARY KEY,
-                                     code VARCHAR(10) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL,
-    symbol VARCHAR(10) NOT NULL
-    );
-
--- Tabla: property_type
-CREATE TABLE IF NOT EXISTS property_type (property_type_id BIGSERIAL PRIMARY KEY,
-                                          name VARCHAR(100) NOT NULL UNIQUE);
-
--- Tabla: property_status
-CREATE TABLE IF NOT EXISTS property_status (status_id BIGSERIAL PRIMARY KEY,
-                                            name VARCHAR(100) NOT NULL UNIQUE);
-
--- =========================
--- TABLAS PRINCIPALES
--- =========================
-
--- Tabla: user_app
-CREATE TABLE IF NOT EXISTS user_app (user_app_id BIGSERIAL PRIMARY KEY,
-                                     names VARCHAR(255) NOT NULL,
-    surnames VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
-    );
-
--- Tabla: client
-CREATE TABLE IF NOT EXISTS client (client_id BIGSERIAL PRIMARY KEY,
-                                   names VARCHAR(255) NOT NULL,
-    surnames VARCHAR(255) NOT NULL,
-    dni VARCHAR(8) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    phone_number VARCHAR(20),
-    monthly_income NUMERIC(12,2),
-    occupation VARCHAR(255),
-    marital_status BIGINT,
-    current_address TEXT,
-    CONSTRAINT fk_client_marital_status
-    FOREIGN KEY (marital_status)
-    REFERENCES marital_status(marital_status_id)
-    ON DELETE SET NULL
-    );
-
--- Tabla: email_otp
-CREATE TABLE IF NOT EXISTS email_otp (id BIGSERIAL PRIMARY KEY,
-                                      email VARCHAR(255) NOT NULL,
-    otp INTEGER NOT NULL,
-    expiration_time TIMESTAMP NOT NULL,
-    used BOOLEAN DEFAULT false
-    );
-
--- Tabla: property
-CREATE TABLE IF NOT EXISTS property (property_id BIGSERIAL PRIMARY KEY,
-                                     code VARCHAR(50) NOT NULL UNIQUE,
-    address TEXT NOT NULL,
-    area_m2 DOUBLE PRECISION,
-    bedrooms INTEGER,
-    bathrooms INTEGER,
-    sale_price NUMERIC(12,2) NOT NULL,
-    property_type_id BIGINT NOT NULL,
-    currency_id BIGINT NOT NULL,
-    status_id BIGINT NOT NULL,
-    CONSTRAINT fk_property_type
-    FOREIGN KEY (property_type_id)
-    REFERENCES property_type(property_type_id)
-    ON DELETE RESTRICT,
-    CONSTRAINT fk_property_currency
-    FOREIGN KEY (currency_id)
-    REFERENCES currency(currency_id)
-    ON DELETE RESTRICT,
-    CONSTRAINT fk_property_status
-    FOREIGN KEY (status_id)
-    REFERENCES property_status(status_id)
-    ON DELETE RESTRICT
-    );
-
--- Tabla: loan
-CREATE TABLE IF NOT EXISTS loan (loan_id BIGSERIAL PRIMARY KEY,
-                                 client_id BIGINT NOT NULL,
-                                 asesor_id BIGINT,
-                                 financial_entity_id BIGINT,
-                                 property_id BIGINT,
-                                 principal NUMERIC(12,2) NOT NULL,
-    property_price NUMERIC(12,2),
-    down_payment NUMERIC(12,2),
-    down_payment_percentage NUMERIC(5,2),
-    tea NUMERIC(8,6),
-    rate_type VARCHAR(10),
-    tnp NUMERIC(8,6),
-    capitalization_frequency_id BIGINT,
-    years INTEGER NOT NULL,
-    frequency_per_year INTEGER DEFAULT 12,
-    total_grace INTEGER DEFAULT 0,
-    partial_grace INTEGER DEFAULT 0,
-    cok NUMERIC(8,6),
-    tir NUMERIC(8,6),
-    tcea NUMERIC(8,6),
-    van NUMERIC(15,2),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_loan_client
-    FOREIGN KEY (client_id)
-    REFERENCES client(client_id)
-    ON DELETE CASCADE,
-    CONSTRAINT fk_loan_asesor
-    FOREIGN KEY (asesor_id)
-    REFERENCES user_app(user_app_id)
-    ON DELETE SET NULL,
-    CONSTRAINT fk_loan_financial_entity
-    FOREIGN KEY (financial_entity_id)
-    REFERENCES financial_entity(financial_entity_id)
-    ON DELETE SET NULL,
-    CONSTRAINT fk_loan_capitalization
-    FOREIGN KEY (capitalization_frequency_id)
-    REFERENCES capitalization_frequency(capitalization_frequency_id)
-    ON DELETE SET NULL,
-    CONSTRAINT fk_loan_property
-    FOREIGN KEY (property_id)
-    REFERENCES property(property_id)
-    ON DELETE SET NULL
-    );
-
--- Tabla: loan_installment
-CREATE TABLE IF NOT EXISTS loan_installment (id BIGSERIAL PRIMARY KEY,
-                                             loan_id BIGINT NOT NULL,
-                                            period INTEGER NOT NULL,
-                                            initial_balance NUMERIC(12,2),
-    interest NUMERIC(12,2),
-    amortization NUMERIC(12,2),
-    fee NUMERIC(12,2),
-    final_balance NUMERIC(12,2),
-    cash_flow NUMERIC(12,2),
-    CONSTRAINT fk_installment_loan
-    FOREIGN KEY (loan_id)
-    REFERENCES loan(loan_id)
-    ON DELETE CASCADE
-    );
+--CREATE TABLE IF NOT EXISTS capitalization_frequency (capitalization_frequency_id BIGSERIAL PRIMARY KEY,
+--                                                     name VARCHAR(50) NOT NULL UNIQUE, periods_per_year INTEGER NOT NULL);
+--
+---- Tabla: marital_status
+--CREATE TABLE IF NOT EXISTS marital_status (marital_status_id BIGSERIAL PRIMARY KEY,
+--                                           status_name VARCHAR(50) NOT NULL UNIQUE);
+--
+---- Tabla: financial_entity
+--CREATE TABLE IF NOT EXISTS financial_entity (financial_entity_id BIGSERIAL PRIMARY KEY,
+--                                             name VARCHAR(255) NOT NULL,
+--    code VARCHAR(50) NOT NULL UNIQUE,
+--    down_payment_percentage NUMERIC(5,2) NOT NULL,
+--    active BOOLEAN DEFAULT true);
+--
+---- Tabla: currency
+--CREATE TABLE IF NOT EXISTS currency (currency_id BIGSERIAL PRIMARY KEY,
+--                                     code VARCHAR(10) NOT NULL UNIQUE,
+--    name VARCHAR(100) NOT NULL,
+--    symbol VARCHAR(10) NOT NULL
+--    );
+--
+---- Tabla: property_type
+--CREATE TABLE IF NOT EXISTS property_type (property_type_id BIGSERIAL PRIMARY KEY,
+--                                          name VARCHAR(100) NOT NULL UNIQUE);
+--
+---- Tabla: property_status
+--CREATE TABLE IF NOT EXISTS property_status (status_id BIGSERIAL PRIMARY KEY,
+--                                            name VARCHAR(100) NOT NULL UNIQUE);
+--
+---- =========================
+---- TABLAS PRINCIPALES
+---- =========================
+--
+---- Tabla: user_app
+--CREATE TABLE IF NOT EXISTS user_app (user_app_id BIGSERIAL PRIMARY KEY,
+--                                     names VARCHAR(255) NOT NULL,
+--    surnames VARCHAR(255) NOT NULL,
+--    email VARCHAR(255) NOT NULL UNIQUE,
+--    username VARCHAR(100) NOT NULL UNIQUE,
+--    password VARCHAR(255) NOT NULL
+--    );
+--
+---- Tabla: client
+--CREATE TABLE IF NOT EXISTS client (client_id BIGSERIAL PRIMARY KEY,
+--                                   names VARCHAR(255) NOT NULL,
+--    surnames VARCHAR(255) NOT NULL,
+--    dni VARCHAR(8) NOT NULL UNIQUE,
+--    email VARCHAR(255) NOT NULL UNIQUE,
+--    phone_number VARCHAR(20),
+--    monthly_income NUMERIC(12,2),
+--    occupation VARCHAR(255),
+--    marital_status BIGINT,
+--    current_address TEXT,
+--    CONSTRAINT fk_client_marital_status
+--    FOREIGN KEY (marital_status)
+--    REFERENCES marital_status(marital_status_id)
+--    ON DELETE SET NULL
+--    );
+--
+---- Tabla: email_otp
+--CREATE TABLE IF NOT EXISTS email_otp (id BIGSERIAL PRIMARY KEY,
+--                                      email VARCHAR(255) NOT NULL,
+--    otp INTEGER NOT NULL,
+--    expiration_time TIMESTAMP NOT NULL,
+--    used BOOLEAN DEFAULT false
+--    );
+--
+---- Tabla: property
+--CREATE TABLE IF NOT EXISTS property (property_id BIGSERIAL PRIMARY KEY,
+--                                     code VARCHAR(50) NOT NULL UNIQUE,
+--    address TEXT NOT NULL,
+--    area_m2 DOUBLE PRECISION,
+--    bedrooms INTEGER,
+--    bathrooms INTEGER,
+--    sale_price NUMERIC(12,2) NOT NULL,
+--    property_type_id BIGINT NOT NULL,
+--    currency_id BIGINT NOT NULL,
+--    status_id BIGINT NOT NULL,
+--    CONSTRAINT fk_property_type
+--    FOREIGN KEY (property_type_id)
+--    REFERENCES property_type(property_type_id)
+--    ON DELETE RESTRICT,
+--    CONSTRAINT fk_property_currency
+--    FOREIGN KEY (currency_id)
+--    REFERENCES currency(currency_id)
+--    ON DELETE RESTRICT,
+--    CONSTRAINT fk_property_status
+--    FOREIGN KEY (status_id)
+--    REFERENCES property_status(status_id)
+--    ON DELETE RESTRICT
+--    );
+--
+---- Tabla: loan
+--CREATE TABLE IF NOT EXISTS loan (loan_id BIGSERIAL PRIMARY KEY,
+--                                 client_id BIGINT NOT NULL,
+--                                 asesor_id BIGINT,
+--                                 financial_entity_id BIGINT,
+--                                 property_id BIGINT,
+--                                 principal NUMERIC(12,2) NOT NULL,
+--    property_price NUMERIC(12,2),
+--    down_payment NUMERIC(12,2),
+--    down_payment_percentage NUMERIC(5,2),
+--    tea NUMERIC(8,6),
+--    rate_type VARCHAR(10),
+--    tnp NUMERIC(8,6),
+--    capitalization_frequency_id BIGINT,
+--    years INTEGER NOT NULL,
+--    frequency_per_year INTEGER DEFAULT 12,
+--    total_grace INTEGER DEFAULT 0,
+--    partial_grace INTEGER DEFAULT 0,
+--    cok NUMERIC(8,6),
+--    tir NUMERIC(8,6),
+--    tcea NUMERIC(8,6),
+--    van NUMERIC(15,2),
+--    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    CONSTRAINT fk_loan_client
+--    FOREIGN KEY (client_id)
+--    REFERENCES client(client_id)
+--    ON DELETE CASCADE,
+--    CONSTRAINT fk_loan_asesor
+--    FOREIGN KEY (asesor_id)
+--    REFERENCES user_app(user_app_id)
+--    ON DELETE SET NULL,
+--    CONSTRAINT fk_loan_financial_entity
+--    FOREIGN KEY (financial_entity_id)
+--    REFERENCES financial_entity(financial_entity_id)
+--    ON DELETE SET NULL,
+--    CONSTRAINT fk_loan_capitalization
+--    FOREIGN KEY (capitalization_frequency_id)
+--    REFERENCES capitalization_frequency(capitalization_frequency_id)
+--    ON DELETE SET NULL,
+--    CONSTRAINT fk_loan_property
+--    FOREIGN KEY (property_id)
+--    REFERENCES property(property_id)
+--    ON DELETE SET NULL
+--    );
+--
+---- Tabla: loan_installment
+--CREATE TABLE IF NOT EXISTS loan_installment (id BIGSERIAL PRIMARY KEY,
+--                                             loan_id BIGINT NOT NULL,
+--                                            period INTEGER NOT NULL,
+--                                            initial_balance NUMERIC(12,2),
+--    interest NUMERIC(12,2),
+--    amortization NUMERIC(12,2),
+--    fee NUMERIC(12,2),
+--    final_balance NUMERIC(12,2),
+--    cash_flow NUMERIC(12,2),
+--    CONSTRAINT fk_installment_loan
+--    FOREIGN KEY (loan_id)
+--    REFERENCES loan(loan_id)
+--    ON DELETE CASCADE
+--    );
 
 -- =========================
 -- LIMPIAR DATOS EXISTENTES (OPCIONAL - COMENTAR SI NO DESEAS BORRAR)

@@ -1,9 +1,6 @@
 package com.upc.finanzasbackend.controllers;
-import com.upc.finanzasbackend.dtos.EstadoCivilDTO;
 import com.upc.finanzasbackend.dtos.MaritalStatusDTO;
-import com.upc.finanzasbackend.entities.EstadoCivil;
 import com.upc.finanzasbackend.entities.MaritalStatus;
-import com.upc.finanzasbackend.repositories.EstadoCivilRepository;
 import com.upc.finanzasbackend.repositories.MaritalStatusRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
