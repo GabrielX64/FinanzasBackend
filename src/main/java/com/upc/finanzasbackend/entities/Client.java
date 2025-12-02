@@ -34,8 +34,8 @@ public class Client {
 
     // Relación ManyToOne con EstadoCivil
     @ManyToOne
-    @JoinColumn(name = "maritalStatus")
-    private MaritalStatus maritalStatus;
+    @JoinColumn(name = "marital_status_id", nullable = false)
+    private MaritalStatus maritalStatusId;
 
     private String currentAddress;
 

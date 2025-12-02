@@ -42,8 +42,8 @@ public class ClientController {
         dto.setOccupation(client.getOccupation());
         dto.setCurrentAddress(client.getCurrentAddress());
 
-        if (client.getMaritalStatus() != null) {
-            dto.setMaritalStatusID(client.getMaritalStatus().getMaritalStatusId());
+        if (client.getMaritalStatusId() != null) {
+            dto.setMaritalStatusID(client.getMaritalStatusId().getMaritalStatusId());
         }
 
         return dto;
@@ -66,7 +66,7 @@ public class ClientController {
         if (dto.getMaritalStatusID() != null) {
             MaritalStatus maritalStatus = maritalStatusRepository.findById(dto.getMaritalStatusID())
                     .orElseThrow(() -> new RuntimeException("Estado civil no encontrado"));
-            client.setMaritalStatus(maritalStatus);
+            client.setMaritalStatusId(maritalStatus);
         }
 
         return client;
