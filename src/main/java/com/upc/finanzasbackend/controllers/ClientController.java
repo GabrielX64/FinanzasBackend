@@ -26,6 +26,7 @@ public class ClientController {
     @Autowired
     private MaritalStatusRepository maritalStatusRepository;
 
+    // Commit de bromita
     private final ModelMapper mapper = new ModelMapper();
 
     // Método auxiliar para convertir Entity a DTO
