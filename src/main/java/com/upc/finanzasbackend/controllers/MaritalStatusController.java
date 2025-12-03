@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -22,12 +23,14 @@ public class MaritalStatusController {
     private final ModelMapper mapper = new ModelMapper();
 
     @GetMapping("/estados-civiles")
+    @PreAuthorize("hasRole('USER')")
     public List<MaritalStatusDTO> getAllEstadosCiviles() {
         List<MaritalStatus> estados = maritalStatusRepository.findAll();
         return Arrays.asList(mapper.map(estados, MaritalStatusDTO[].class));
     }
 
     @GetMapping("/estado-civil/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<MaritalStatusDTO> getEstadoCivilById(@PathVariable Long id) {
         MaritalStatus status = maritalStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Estado civil no encontrado"));

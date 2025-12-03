@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -62,12 +63,14 @@ public class PropertyController {
     }
 
     @GetMapping("/propiedades")
+    @PreAuthorize("hasRole('USER')")
     public List<PropertyDTO> getAllProperties() {
         List<Property> properties = propertyService.getAllProperties();
         return properties.stream().map(this::toDTO).collect(java.util.stream.Collectors.toList());
     }
 
     @GetMapping("/propiedad/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PropertyDTO> getPropertyById(@PathVariable Long id) {
         Property property = propertyService.getPropertyById(id);
         return ResponseEntity.ok(toDTO(property));

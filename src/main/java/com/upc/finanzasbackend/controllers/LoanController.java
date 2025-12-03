@@ -7,6 +7,7 @@ import com.upc.finanzasbackend.dtos.LoanResponseDTO;
 import com.upc.finanzasbackend.entities.Loan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,23 +21,27 @@ public class LoanController {
     private ILoanService loanService;
 
     @PostMapping("/loan/french")
+    @PreAuthorize("hasRole('USER')")
     public LoanResponseDTO createFrenchLoan(@RequestBody LoanRequestDTO dto) {
         log.info("Creando préstamo para cliente ID: {}", dto.getClientID());
         return loanService.createFrenchLoan(dto);
     }
 
     @GetMapping("/loan/{loanID}/schedule")
+    @PreAuthorize("hasRole('USER')")
     public List<LoanInstallmentDTO> getSchedule(@PathVariable Long loanID) {
         return loanService.getScheduleByLoanId(loanID);
     }
 
     @GetMapping("/loan/cliente/{clienteID}")
+    @PreAuthorize("hasRole('USER')")
     public List<Loan> getLoansByCliente(@PathVariable Long clienteID) {
         log.info("Obteniendo préstamos del cliente ID: {}", clienteID);
         return loanService.getLoanByClient(clienteID);
     }
 
     @GetMapping("/loan/asesor/{asesorID}")
+    @PreAuthorize("hasRole('USER')")
     public List<Loan> getLoansByAsesor(@PathVariable Long asesorID) {
         log.info("Obteniendo préstamos gestionados por asesor ID: {}", asesorID);
         return loanService.getLoansByUser(asesorID);

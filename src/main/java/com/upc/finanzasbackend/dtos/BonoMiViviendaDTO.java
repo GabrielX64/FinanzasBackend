@@ -11,10 +11,10 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class BonoMiViviendaDTO {
-private boolean applies;
-private String reason;
-private String tipobonusType; // "BUEN PAGADOR" o "FAMILIAR"
-private BigDecimal bonusAmount;
-private BigDecimal propertyPrice;
-private BigDecimal monthlyIncome;
+    private boolean applies;
+    private String reason;
+    private String tipobonusType; // "BUEN PAGADOR" o "FAMILIAR"
+    private BigDecimal bonusAmount;
+    private BigDecimal propertyPrice;
+    private BigDecimal monthlyIncome;
 }

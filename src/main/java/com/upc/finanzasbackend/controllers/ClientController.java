@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -29,7 +30,7 @@ public class ClientController {
     // Commit de bromita
     private final ModelMapper mapper = new ModelMapper();
 
-    // Método auxiliar para convertir Entity a DTO
+    // Metodo auxiliar para convertir Entity a DTO
     private ClientDTO toDTO(Client client) {
         ClientDTO dto = new ClientDTO();
         dto.setClientID(client.getClientID());
@@ -49,7 +50,7 @@ public class ClientController {
         return dto;
     }
 
-    // Método auxiliar para convertir DTO a Entity
+    // Metodo auxiliar para convertir DTO a Entity
     private Client toEntity(ClientDTO dto) {
         Client client = new Client();
         client.setClientID(dto.getClientID());
@@ -73,24 +74,28 @@ public class ClientController {
     }
 
     @GetMapping("/clientes")
+    @PreAuthorize("hasRole('USER')")
     public List<ClientDTO> getAllClientes() {
         List<Client> clientes = clientService.getAllClientes();
         return clientes.stream().map(this::toDTO).collect(java.util.stream.Collectors.toList());
     }
 
     @GetMapping("/cliente/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
         Client client = clientService.getClientById(id);
         return ResponseEntity.ok(toDTO(client));
     }
 
     @GetMapping("/cliente/dni/{dni}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ClientDTO> getClientByDni(@PathVariable String dni) {
         Client client = clientService.getClientByDni(dni);
         return ResponseEntity.ok(toDTO(client));
     }
 
     @PostMapping("/cliente")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ClientDTO> createClient(@RequestBody ClientDTO clientDTO) {
         Client client = toEntity(clientDTO);
         client = clientService.createClient(client);
@@ -98,6 +103,7 @@ public class ClientController {
     }
 
     @PutMapping("/cliente/update")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ClientDTO> updateClient(@RequestBody ClientDTO clientDTO) {
         Client client = toEntity(clientDTO);
         client = clientService.updateClient(client);
@@ -105,12 +111,14 @@ public class ClientController {
     }
 
     @DeleteMapping("/cliente/delete/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<String> deleteClient(@PathVariable Long id) {
         clientService.deleteClient(id);
         return ResponseEntity.ok("Cliente eliminado correctamente");
     }
 
     @GetMapping("/cliente/{clienteId}/bono-mivivienda")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<BonoMiViviendaDTO> checkMyHomeBonus(
             @PathVariable Long clienteId,
             @RequestParam BigDecimal precioVivienda) {

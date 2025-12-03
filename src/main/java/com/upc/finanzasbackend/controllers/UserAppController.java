@@ -3,11 +3,18 @@ package com.upc.finanzasbackend.controllers;
 import com.upc.finanzasbackend.Interfaces.IUserAppService;
 import com.upc.finanzasbackend.dtos.UserAppDTO;
 import com.upc.finanzasbackend.entities.UserApp;
+import com.upc.finanzasbackend.security.entities.Role;
+import com.upc.finanzasbackend.security.entities.User;
+import com.upc.finanzasbackend.security.repositories.RoleRepository;
+import com.upc.finanzasbackend.security.services.RoleService;
+import com.upc.finanzasbackend.security.services.UserServices;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 //import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,9 +29,15 @@ import java.util.List;
 public class UserAppController {
     @Autowired
     private IUserAppService userAppService;
+    @Autowired
+    private PasswordEncoder bcrypt;
+    @Autowired
+    private UserServices userService;
+    @Autowired
+    private RoleService roleService;
 
     @GetMapping("/users")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserAppDTO> getUsers(){
         ModelMapper mapper = new ModelMapper();
         List<UserApp> userApps = userAppService.getUserApps();
@@ -35,8 +48,20 @@ public class UserAppController {
     public ResponseEntity<UserAppDTO> registerUser(@RequestBody UserAppDTO userAppDTO){
         ModelMapper mapper = new ModelMapper();
         UserApp userApp = mapper.map(userAppDTO, UserApp.class);
+        String bcryptPassword = bcrypt.encode(userApp.getPassword());
+        userApp.setPassword(bcryptPassword);
         userApp = userAppService.registerUserApp(userApp);
         userAppDTO = mapper.map(userApp, UserAppDTO.class);
+
+        User user = new User();
+        user.setNames(userAppDTO.getNames()); // o userApp.getNames()
+        user.setSurnames(userAppDTO.getSurnames());
+        user.setEmail(userApp.getEmail());
+        user.setUsername(userApp.getUsername());
+        user.setPassword(bcryptPassword); // Misma contraseña encriptada
+
+        userService.save(user);
+
         return ResponseEntity.ok(userAppDTO);
     }
 
